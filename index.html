@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRIIF — Dünya Gündemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0e;
+    --surface: #141416;
+    --surface2: #1c1c20;
+    --border: #2a2a30;
+    --text: #e8e8ec;
+    --muted: #6b6b78;
+    --accent: #f0c040;
+    --accent2: #e05a3a;
+    --green: #3ddc84;
+    --red: #ff4d4d;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    background: rgba(12,12,14,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 3px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  .refresh-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 2px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover { background: #ffd060; transform: translateY(-1px); }
+  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--accent);
+    overflow: hidden;
+    height: 32px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ticker-label {
+    background: #000;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    padding: 0 16px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .ticker-track {
+    display: flex;
+    animation: ticker 40s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #000;
+    font-weight: 500;
+    padding: 0 32px;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* TOPIC FILTERS */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(240,192,64,0.07);
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .section-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* NEWS CARDS */
+  .news-feed { display: flex; flex-direction: column; gap: 2px; }
+
+  .news-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    animation: cardIn 0.4s ease both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .news-card:hover { border-color: #3a3a44; }
+
+  .card-main {
+    padding: 24px 28px;
+    cursor: pointer;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .card-number {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 4px;
+    flex-shrink: 0;
+    width: 24px;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .card-category {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 500;
+  }
+
+  .card-source {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .card-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .tldr-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .tldr-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #aaa;
+    font-weight: 300;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .expand-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .expand-btn:hover { color: var(--text); border-color: #444; }
+
+  .translate-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--accent);
+    border: none;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .translate-btn:hover { background: #ffd060; }
+  .translate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .translate-btn.translated {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  /* EXPANDED DETAIL */
+  .card-detail {
+    display: none;
+    padding: 0 28px 24px 72px;
+    border-top: 1px solid var(--border);
+    animation: detailIn 0.25s ease;
+  }
+
+  .card-detail.open { display: block; }
+
+  @keyframes detailIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-inner {
+    padding-top: 20px;
+  }
+
+  .detail-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #bbb;
+    font-weight: 300;
+  }
+
+  .detail-bullets {
+    list-style: none;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .detail-bullets li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #aaa;
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .detail-bullets li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 2px;
+    transition: color 0.15s;
+  }
+
+  .source-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* LOADING STATE */
+  .loading-state {
+    text-align: center;
+    padding: 80px 24px;
+  }
+
+  .loading-animation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .loading-bar {
+    width: 3px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: loadBar 1.2s ease-in-out infinite;
+  }
+
+  .loading-bar:nth-child(2) { animation-delay: 0.15s; }
+  .loading-bar:nth-child(3) { animation-delay: 0.3s; }
+  .loading-bar:nth-child(4) { animation-delay: 0.45s; }
+  .loading-bar:nth-child(5) { animation-delay: 0.6s; }
+
+  @keyframes loadBar {
+    0%, 100% { transform: scaleY(0.4); opacity: 0.3; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+
+  .loading-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .loading-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  /* ERROR STATE */
+  .error-state {
+    text-align: center;
+    padding: 60px 24px;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+
+  .error-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .error-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+
+  .error-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* INLINE SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* TRANSLATED INDICATOR */
+  .lang-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: 8px;
+    opacity: 0.8;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .card-main { padding: 18px; gap: 12px; }
+    .card-detail { padding-left: 48px; }
+    .card-title { font-size: 16px; }
+    header { padding: 0 16px; }
+    .logo { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    BRIIF<span class="logo-dot"></span>
+  </div>
+  <div class="header-right">
+    <span class="live-badge">● Canlı</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadNews()">↻ Yenile</button>
+  </div>
+</header>
+
+<div class="ticker-wrap">
+  <span class="ticker-label">SON DAKİKA</span>
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item">Güncel haberler yükleniyor...</span>
+    <span class="ticker-item">•</span>
+    <span class="ticker-item">Dünya gündemi takip ediliyor</span>
+    <span class="ticker-item">•</span>
+    <span class="ticker-item">BRIIF — Reklamsız, saf haber</span>
+    <span class="ticker-item">•</span>
+    <span class="ticker-item">Güncel haberler yükleniyor...</span>
+    <span class="ticker-item">•</span>
+    <span class="ticker-item">Dünya gündemi takip ediliyor</span>
+    <span class="ticker-item">•</span>
+    <span class="ticker-item">BRIIF — Reklamsız, saf haber</span>
+    <span class="ticker-item">•</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-topic="all" onclick="filterCards(this, 'all')">Tümü</button>
+    <button class="filter-btn" data-topic="Politika" onclick="filterCards(this, 'Politika')">Politika</button>
+    <button class="filter-btn" data-topic="Ekonomi" onclick="filterCards(this, 'Ekonomi')">Ekonomi</button>
+    <button class="filter-btn" data-topic="Teknoloji" onclick="filterCards(this, 'Teknoloji')">Teknoloji</button>
+    <button class="filter-btn" data-topic="Bilim" onclick="filterCards(this, 'Bilim')">Bilim</button>
+    <button class="filter-btn" data-topic="İklim" onclick="filterCards(this, 'İklim')">İklim</button>
+    <button class="filter-btn" data-topic="Sağlık" onclick="filterCards(this, 'Sağlık')">Sağlık</button>
+    <button class="filter-btn" data-topic="Spor" onclick="filterCards(this, 'Spor')">Spor</button>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">Dünya Gündemi</span>
+    <span class="section-count" id="newsCount">—</span>
+  </div>
+
+  <div class="news-feed" id="newsFeed">
+    <div class="loading-state">
+      <div class="loading-animation">
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+      </div>
+      <div class="loading-text">Haberler Taranıyor</div>
+      <div class="loading-sub">Dünya gündemi yükleniyor...</div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  BRIIF © — AI destekli haber platformu — Reklamsız & Bağımsız
+</footer>
+
+<script>
+  let allNewsData = [];
+  let activeFilter = 'all';
+
+  // ─── TAG-BASED PARSER ────────────────────────────────────────────────────
+  // Instead of fragile JSON, we use custom delimiters that never appear in content.
+  // Format: @@BASLIK@@...@@/BASLIK@@  etc.
+  function tag(name, text) {
+    const m = text.match(new RegExp(`@@${name}@@([\\s\\S]*?)@@\/${name}@@`));
+    return m ? m[1].trim() : '';
+  }
+
+  function parseNewsText(raw) {
+    const blocks = raw.split('@@HABER@@').slice(1);
+    return blocks.map((block, i) => {
+      const maddelerRaw = tag('MADDELER', block);
+      const maddeler = maddelerRaw
+        ? maddelerRaw.split('@@M@@').map(s => s.replace('@@/M@@','').trim()).filter(Boolean)
+        : [];
+      return {
+        id: i + 1,
+        baslik:   tag('BASLIK',   block) || 'Başlık yok',
+        kategori: tag('KATEGORI', block) || 'Dünya',
+        kaynak:   tag('KAYNAK',   block) || '—',
+        zaman:    tag('ZAMAN',    block) || 'Az önce',
+        tldr:     tag('TLDR',     block) || '',
+        detay:    tag('DETAY',    block) || '',
+        maddeler,
+        kaynak_url: tag('URL', block) || '',
+        dil: 'TR'
+      };
+    }).filter(n => n.baslik !== 'Başlık yok' || n.tldr);
+  }
+
+  function parseTickerText(raw) {
+    const m = raw.match(/@@TICKER@@([\s\S]*?)@@\/TICKER@@/);
+    if (!m) return [];
+    return m[1].split('@@T@@').map(s => s.replace('@@/T@@','').trim()).filter(Boolean);
+  }
+
+  // ─── LOAD NEWS ───────────────────────────────────────────────────────────
+  async function loadNews() {
+    const btn = document.getElementById('refreshBtn');
+    const feed = document.getElementById('newsFeed');
+    btn.disabled = true;
+    btn.textContent = '↻ Yükleniyor...';
+
+    feed.innerHTML = `
+      <div class="loading-state">
+        <div class="loading-animation">
+          <div class="loading-bar"></div><div class="loading-bar"></div>
+          <div class="loading-bar"></div><div class="loading-bar"></div>
+          <div class="loading-bar"></div>
+        </div>
+        <div class="loading-text">Haberler Taranıyor</div>
+        <div class="loading-sub">Claude dünya gündemini tarıyor...</div>
+      </div>`;
+
+    try {
+      const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      const SYSTEM = `Sen bir dünya gündemi editörüsün. Haberleri SADECE aşağıdaki özel etiket formatında yaz. Başka hiçbir şey yazma.
+
+Her haber için bu formatı kullan:
+@@HABER@@
+@@BASLIK@@Türkçe başlık buraya@@/BASLIK@@
+@@KATEGORI@@Politika@@/KATEGORI@@
+@@KAYNAK@@Reuters@@/KAYNAK@@
+@@ZAMAN@@2 saat önce@@/ZAMAN@@
+@@TLDR@@1-2 cümlelik özet. Ne oldu, neden önemli.@@/TLDR@@
+@@DETAY@@3-4 cümlelik daha kapsamlı açıklama. Arka plan ve bağlam.@@/DETAY@@
+@@MADDELER@@@@M@@Önemli nokta bir@@/M@@@@M@@Önemli nokta iki@@/M@@@@M@@Önemli nokta üç@@/M@@@@/MADDELER@@
+@@URL@@https://example.com veya boş@@/URL@@
+@@/HABER@@
+
+Ticker için:
+@@TICKER@@@@T@@Birinci ticker metni@@/T@@@@T@@İkinci ticker metni@@/T@@@@T@@Üçüncü@@/T@@@@T@@Dördüncü@@/T@@@@T@@Beşinci@@/T@@@@/TICKER@@
+
+KATEGORİ seçenekleri: Politika, Ekonomi, Teknoloji, Bilim, İklim, Sağlık, Spor, Dünya`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 5000,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          system: SYSTEM,
+          messages: [{
+            role: "user",
+            content: `Bugün ${today} tarihli dünya gündeminin en önemli 10 haberini getir. Politika, ekonomi, teknoloji, bilim, iklim, sağlık, spor gibi farklı kategorilerden seç. Önce haberleri web'de ara, sonra belirlenen etiket formatında yaz. Sadece Türkçe yaz.`
+          }]
+        })
+      });
+
+      const data = await response.json();
+
+      // Collect all text blocks (web_search may split into multiple)
+      let raw = data.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n');
+
+      const news = parseNewsText(raw);
+      if (!news.length) throw new Error('Haber ayrıştırılamadı');
+
+      allNewsData = news;
+
+      const tickers = parseTickerText(raw);
+      if (tickers.length) updateTicker(tickers);
+
+      document.getElementById('newsCount').textContent = `${news.length} haber`;
+      renderCards(news);
+
+    } catch (err) {
+      console.error('loadNews error:', err);
+      feed.innerHTML = `
+        <div class="error-state">
+          <div class="error-icon">⚡</div>
+          <div class="error-text">Haber yüklenemedi</div>
+          <div class="error-sub">${err.message} — Lütfen tekrar deneyin.</div>
+        </div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '↻ Yenile';
+    }
+  }
+
+  // ─── TICKER ──────────────────────────────────────────────────────────────
+  function updateTicker(items) {
+    const track = document.getElementById('tickerTrack');
+    const doubled = [...items, ...items];
+    track.innerHTML = doubled.map(t =>
+      `<span class="ticker-item">${t}</span><span class="ticker-item">•</span>`
+    ).join('');
+  }
+
+  // ─── RENDER ──────────────────────────────────────────────────────────────
+  function renderCards(news) {
+    const feed = document.getElementById('newsFeed');
+    if (!news || !news.length) {
+      feed.innerHTML = '<div class="empty-state">Bu kategoride haber bulunamadı.</div>';
+      return;
+    }
+    feed.innerHTML = news.map((item, idx) => `
+      <div class="news-card" data-category="${item.kategori}" style="animation-delay:${idx * 0.05}s">
+        <div class="card-main" onclick="toggleDetail(${item.id})">
+          <span class="card-number">${String(idx + 1).padStart(2, '0')}</span>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-category">${item.kategori}</span>
+              <span class="card-source">${item.kaynak}</span>
+              <span class="card-time">${item.zaman}</span>
+            </div>
+            <div class="card-title" id="title-${item.id}">${item.baslik}</div>
+            <span class="tldr-label">TL;DR</span>
+            <div class="tldr-text" id="tldr-${item.id}">${item.tldr}</div>
+            <div class="card-actions">
+              <button class="expand-btn" onclick="event.stopPropagation(); toggleDetail(${item.id})">
+                <span id="expandIcon-${item.id}">＋</span> Detay
+              </button>
+              <button class="translate-btn" id="translateBtn-${item.id}"
+                onclick="event.stopPropagation(); translateCard(${item.id})"
+                ${item.dil === 'TR' ? 'disabled' : ''}>
+                ${item.dil === 'TR' ? '✓ Türkçe' : '🌐 Türkçeye Çevir'}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-detail" id="detail-${item.id}">
+          <div class="detail-inner">
+            <p class="detail-text" id="detailText-${item.id}">${item.detay}</p>
+            ${item.maddeler.length ? `<ul class="detail-bullets">${item.maddeler.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+            ${item.kaynak_url ? `<a href="${item.kaynak_url}" class="source-link" target="_blank">↗ Kaynağa Git</a>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ─── TOGGLE DETAIL ───────────────────────────────────────────────────────
+  function toggleDetail(id) {
+    const detail = document.getElementById(`detail-${id}`);
+    const icon   = document.getElementById(`expandIcon-${id}`);
+    const isOpen = detail.classList.contains('open');
+    detail.classList.toggle('open', !isOpen);
+    if (icon) icon.textContent = isOpen ? '＋' : '－';
+  }
+
+  // ─── TRANSLATE ───────────────────────────────────────────────────────────
+  async function translateCard(id) {
+    const news = allNewsData.find(n => n.id === id);
+    if (!news || news.dil === 'TR') return;
+
+    const btn = document.getElementById(`translateBtn-${id}`);
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Çevriliyor...';
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: `Sadece çeviri yap. Aşağıdaki etiket formatını kullan, başka hiçbir şey yazma:
+@@BASLIK@@çevrilmiş başlık@@/BASLIK@@
+@@TLDR@@çevrilmiş tldr@@/TLDR@@
+@@DETAY@@çevrilmiş detay@@/DETAY@@
+@@MADDELER@@@@M@@madde 1@@/M@@@@M@@madde 2@@/M@@@@M@@madde 3@@/M@@@@/MADDELER@@`,
+          messages: [{
+            role: "user",
+            content: `Şu içeriği doğal ve akıcı Türkçeye çevir:\nBAŞLIK: ${news.baslik}\nTLDR: ${news.tldr}\nDETAY: ${news.detay}\nMADDELER: ${news.maddeler.join(' | ')}`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+      const baslik = tag('BASLIK', raw);
+      const tldr   = tag('TLDR',   raw);
+      const detay  = tag('DETAY',  raw);
+      const mRaw   = tag('MADDELER', raw);
+      const maddeler = mRaw
+        ? mRaw.split('@@M@@').map(s => s.replace('@@/M@@','').trim()).filter(Boolean)
+        : news.maddeler;
+
+      if (baslik) document.getElementById(`title-${id}`).innerHTML = baslik + '<span class="lang-badge">TR</span>';
+      if (tldr)   document.getElementById(`tldr-${id}`).textContent = tldr;
+      if (detay)  document.getElementById(`detailText-${id}`).textContent = detay;
+
+      // Update bullets
+      const detail = document.getElementById(`detail-${id}`);
+      const ul = detail.querySelector('.detail-bullets');
+      if (ul && maddeler.length) ul.innerHTML = maddeler.map(m => `<li>${m}</li>`).join('');
+
+      news.dil = 'TR';
+      btn.classList.add('translated');
+      btn.innerHTML = '✓ Türkçe';
+      btn.disabled = true;
+
+    } catch (err) {
+      console.error('translate error:', err);
+      btn.disabled = false;
+      btn.innerHTML = '🌐 Tekrar Dene';
+    }
+  }
+
+  // ─── FILTER ──────────────────────────────────────────────────────────────
+  function filterCards(btnEl, topic) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    activeFilter = topic;
+    const filtered = topic === 'all' ? allNewsData : allNewsData.filter(n => n.kategori === topic);
+    document.getElementById('newsCount').textContent = `${filtered.length} haber`;
+    renderCards(filtered);
+  }
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
+  loadNews();
+</script>
+</body>
+</html>
